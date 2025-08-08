@@ -1,0 +1,24 @@
+[Unit]
+Description=CarPi Main Service
+After=network-online.target bluetooth.service time-sync.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=carpi
+Group=carpi
+WorkingDirectory=/opt/carpi
+EnvironmentFile=-/opt/carpi/.env
+Environment=PYTHONUNBUFFERED=1
+Environment=PYTHONPATH=/opt/carpi/src
+ExecStart=/opt/carpi/venv/bin/python /opt/carpi/src/carpi/main.py
+Restart=always
+RestartSec=2
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+
+
+
