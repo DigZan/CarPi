@@ -215,7 +215,8 @@ class SSDManager:
         payload = {
             "connected": device_present,
             "mounted": mounted,
-            "device": (self._current.path if self._current else None),
+            # Only show device path when a removable USB device is selected
+            "device": (self._current.path if (self._current and self._current.transport == "usb") else None),
             "model": (self._current.model if self._current else None),
             "fs": (self._current.fs_type if self._current else None),
             "mountpoint": self._mountpoint,

@@ -87,6 +87,14 @@ class WebServer:
         <pre id="bme">Loading...</pre>
       </div>
       <div>
+        <h3>ICM-20948</h3>
+        <pre id="icm">Loading...</pre>
+      </div>
+      <div>
+        <h3>GPS</h3>
+        <pre id="gps">Loading...</pre>
+      </div>
+      <div>
         <h3>Bluetooth Current</h3>
         <pre id="btcur">Loading...</pre>
       </div>
@@ -105,6 +113,12 @@ class WebServer:
           }
           if(msg.topic === 'sensor.bme280'){
             document.getElementById('bme').textContent = JSON.stringify(msg.data,null,2);
+          }
+          if(msg.topic === 'sensor.icm20948'){
+            document.getElementById('icm').textContent = JSON.stringify(msg.data,null,2);
+          }
+          if(msg.topic === 'sensor.gps'){
+            document.getElementById('gps').textContent = JSON.stringify(msg.data,null,2);
           }
           if(msg.topic === 'bt.status'){
             document.getElementById('btcur').textContent = JSON.stringify(msg.data.current,null,2);
@@ -137,6 +151,8 @@ class WebServer:
         tasks = [
             asyncio.create_task(forward("storage.usb")),
             asyncio.create_task(forward("sensor.bme280")),
+            asyncio.create_task(forward("sensor.icm20948")),
+            asyncio.create_task(forward("sensor.gps")),
             asyncio.create_task(forward("bt.status")),
         ]
 
