@@ -35,7 +35,7 @@ class GPSReader:
                 pass
             self._task = None
 
-    def _read_loop(self) -> None:
+    def _read_loop(self, loop: asyncio.AbstractEventLoop) -> None:
         try:
             with serial.Serial(self._port, self._baud, timeout=1) as ser:
                 logger.info("GPS opened on %s @ %s", self._port, self._baud)
@@ -49,7 +49,6 @@ class GPSReader:
                         continue
                     ts = dt.datetime.utcnow().isoformat()
                     data = {"sentence": msg.sentence_type, "raw": line}
-                    loop = asyncio.get_running_loop()
                     asyncio.run_coroutine_threadsafe(self._db.insert_sensor_reading("gps", ts, data), loop)
                     asyncio.run_coroutine_threadsafe(self._events.publish("sensor.gps", {"ts": ts, **data}), loop)
         except Exception as exc:
@@ -59,7 +58,7 @@ class GPSReader:
         # Run blocking reader in a thread
         loop = asyncio.get_running_loop()
         while True:
-            await loop.run_in_executor(None, self._read_loop)
+            await loop.run_in_executor(None, self._read_loop, loop)
             await asyncio.sleep(1)
 
 
