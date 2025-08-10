@@ -143,21 +143,31 @@ class SSDManager:
             if not p.fs_type:
                 return False
             # Ignore obvious system device prefixes
-            forbidden_prefixes = ("mmcblk", "loop", "zram", "dm-", "md", "sr")
+            forbidden_prefixes = ("mmcblk", "nvme", "loop", "zram", "dm-", "md", "sr")
             if any((p.name or "").startswith(pref) for pref in forbidden_prefixes):
                 return False
-            # If mounted, prefer typical external mount locations
-            if p.mountpoint and not any(p.mountpoint.startswith(prefix) for prefix in ("/media", "/mnt")):
+            # If mounted, require typical external mount locations
+            if p.mountpoint and not any(p.mountpoint.startswith(prefix) for prefix in ("/media", "/mnt", "/run/media")):
                 return False
             return True
 
         candidate = next((p for p in parts if _is_candidate(p)), None)
 
+        # If we previously had a current selection that no longer matches the criteria, drop it
+        if self._current is not None and not _is_candidate(self._current):
+            self._current = None
+            # Do not unmount if mountpoint is a system path; only unmount mounts we created under mount_base
+            if self._mountpoint and self._mountpoint.startswith(self._mount_base + "/"):
+                await self._ensure_unmounted()
+            self._mountpoint = None
+            await self._publish_status()
+
         if candidate is None:
             # No device present
             if self._current is not None:
                 # Device removed while mounted -> clear state
-                await self._ensure_unmounted()
+                if self._mountpoint and self._mountpoint.startswith(self._mount_base + "/"):
+                    await self._ensure_unmounted()
                 self._current = None
                 self._mountpoint = None
                 await self._publish_status()
@@ -210,7 +220,12 @@ class SSDManager:
                 logger.warning("Umount exception: %s", exc)
             # Try cleanup directory if empty
             try:
-                if self._mountpoint and os.path.isdir(self._mountpoint) and not os.listdir(self._mountpoint):
+                if (
+                    self._mountpoint
+                    and self._mountpoint.startswith(self._mount_base + "/")
+                    and os.path.isdir(self._mountpoint)
+                    and not os.listdir(self._mountpoint)
+                ):
                     os.rmdir(self._mountpoint)
             except Exception:
                 pass

@@ -57,6 +57,15 @@ class ICM20948Reader:
                 gx = read_word(0x33, 0x34)
                 gy = read_word(0x35, 0x36)
                 gz = read_word(0x37, 0x38)
+                # Magnetometer (AK09916) via I2C master on ICM-20948 requires enabling; attempt basic read if available
+                # These registers are device-specific; for a simple demo, attempt to read 3 axes if exposed
+                mx = my = mz = None
+                try:
+                    mx = read_word(0x11, 0x12)
+                    my = read_word(0x13, 0x14)
+                    mz = read_word(0x15, 0x16)
+                except Exception:
+                    pass
                 # Convert to units (very rough, for display only)
                 ax_g = ax / 16384.0
                 ay_g = ay / 16384.0
@@ -64,10 +73,14 @@ class ICM20948Reader:
                 gx_dps = gx / 131.0
                 gy_dps = gy / 131.0
                 gz_dps = gz / 131.0
-                return {
+                result: dict[str, float | dict[str, float] | None] = {
                     "accel_g": {"x": float(ax_g), "y": float(ay_g), "z": float(az_g)},
                     "gyro_dps": {"x": float(gx_dps), "y": float(gy_dps), "z": float(gz_dps)},
                 }
+                if mx is not None and my is not None and mz is not None:
+                    # Units unknown without proper config; expose raw for display
+                    result["mag_raw"] = {"x": float(mx), "y": float(my), "z": float(mz)}
+                return result  # type: ignore[return-value]
         except Exception as exc:
             logger.debug("ICM20948 read failed: %s", exc)
             return None
