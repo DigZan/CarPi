@@ -25,7 +25,7 @@ Modular Raspberry Pi in-car system with sensors, audio mixing, Bluetooth, naviga
 Run in a terminal on Raspberry Pi OS (Bookworm recommended):
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/yourname/CarPi/main/install.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/DigZan/CarPi/main/install.sh | sudo bash
 ```
 
 This will:

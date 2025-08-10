@@ -7,7 +7,7 @@ set -euo pipefail
 # Optional env var to customize repo:
 #   REPO_URL=https://github.com/<you>/CarPi.git BRANCH=main bash install.sh
 
-REPO_URL="${REPO_URL:-https://github.com/yourname/CarPi.git}"
+REPO_URL="${REPO_URL:-https://github.com/DigZan/CarPi.git}"
 BRANCH="${BRANCH:-main}"
 INSTALL_DIR="/opt/carpi"
 APP_USER="carpi"
@@ -22,9 +22,8 @@ fi
 
 apt-get install -y \
   git python3 python3-venv python3-pip \
-  python3-serial python3-smbus i2c-tools \
+  i2c-tools \
   bluez bluez-tools \
-  python3-gpiozero python3-rpi.gpio \
   sqlite3 rsync curl
 
 # Enable I2C and serial (best effort; ignore if raspi-config not present)

@@ -15,6 +15,8 @@ class AppConfig:
     gps_baud: int
     fan_pwm_pin: int
     fan_default_duty: int
+    bt_alias: str
+    phone_alsa_device: str
 
 
 def load_config() -> AppConfig:
@@ -38,6 +40,8 @@ def load_config() -> AppConfig:
         gps_baud=gps_baud,
         fan_pwm_pin=fan_pwm_pin,
         fan_default_duty=fan_default_duty,
+        bt_alias=os.getenv("BT_ALIAS", "CarPi"),
+        phone_alsa_device=os.getenv("PHONE_ALSA_DEVICE", "default"),
     )
 
 

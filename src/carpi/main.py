@@ -15,9 +15,12 @@ from .modules.sensors.gps import GPSReader
 from .modules.sensors.fan import FanController
 
 from .modules.audio.mixer import AudioMixer
+from .modules.audio.input_audio import InputAudio
 from .modules.bluetooth.bt import BluetoothManager
 from .modules.navigation.nav import Navigation
 from .modules.music.music import MusicPlayer
+from .modules.storage.ssd import SSDManager
+from .modules.web.server import WebServer
 
 
 async def main_async() -> None:
@@ -45,8 +48,14 @@ async def main_async() -> None:
 
     mixer = AudioMixer(events)
     mixer.start()
+    # System/local input
+    input_audio = InputAudio(events, device="default", topic="audio.input")
+    input_audio.start()
+    # Phone A2DP/HFP capture (if routed to an ALSA capture device)
+    phone_audio = InputAudio(events, device=cfg.phone_alsa_device, topic="audio.phone")
+    phone_audio.start()
 
-    bt = BluetoothManager(events)
+    bt = BluetoothManager(events, db, alias=cfg.bt_alias, make_discoverable=True, make_pairable=True)
     bt.start()
 
     nav = Navigation(events)
@@ -54,6 +63,12 @@ async def main_async() -> None:
 
     music = MusicPlayer(events)
     music.start()
+
+    ssd = SSDManager(events)
+    ssd.start()
+
+    webserver = WebServer(events, db)
+    webserver.start()
 
     stop_event = asyncio.Event()
 
@@ -76,9 +91,13 @@ async def main_async() -> None:
     await bme.stop()
     await gps.stop()
     await mixer.stop()
+    await input_audio.stop()
+    await phone_audio.stop()
     await bt.stop()
     await nav.stop()
     await music.stop()
+    await ssd.stop()
+    await webserver.stop()
     fan.stop()
     await db.stop()
     logger.info("CarPi shut down")
@@ -89,6 +108,7 @@ if __name__ == "__main__":
         asyncio.run(main_async())
     except KeyboardInterrupt:
         pass
+
 
 
 
