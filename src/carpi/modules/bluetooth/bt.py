@@ -83,21 +83,21 @@ class BluetoothAgent(ServiceInterface):
         raise Exception("org.bluez.Error.Rejected")
 
     # Agent methods
-    @method()
+    @method(out_signature="")
     async def Release(self) -> None:  # noqa: N802 (DBus name)
         return None
 
-    @method(in_signature="ou")
+    @method(in_signature="ou", out_signature="")
     async def RequestConfirmation(self, device, passkey) -> None:  # noqa: N802
         await self._approve_or_reject(device)
         return None
 
-    @method(in_signature="o")
+    @method(in_signature="o", out_signature="")
     async def RequestAuthorization(self, device) -> None:  # noqa: N802
         await self._approve_or_reject(device)
         return None
 
-    @method(in_signature="os")
+    @method(in_signature="os", out_signature="")
     async def AuthorizeService(self, device, uuid) -> None:  # noqa: N802
         await self._approve_or_reject(device)
         return None
@@ -113,15 +113,15 @@ class BluetoothAgent(ServiceInterface):
         await self._approve_or_reject(device)
         return 0
 
-    @method(in_signature="os")
+    @method(in_signature="os", out_signature="")
     async def DisplayPinCode(self, device, pincode) -> None:  # noqa: N802
         return None
 
-    @method(in_signature="ouq")
+    @method(in_signature="ouq", out_signature="")
     async def DisplayPasskey(self, device, passkey, entered) -> None:  # noqa: N802
         return None
 
-    @method()
+    @method(out_signature="")
     async def Cancel(self) -> None:  # noqa: N802
         return None
 
