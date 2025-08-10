@@ -83,46 +83,46 @@ class BluetoothAgent(ServiceInterface):
         raise Exception("org.bluez.Error.Rejected")
 
     # Agent methods
-    @method(out_signature="")
-    async def Release(self) -> None:  # noqa: N802 (DBus name)
+    @method()
+    async def Release(self) -> "":  # noqa: N802 (DBus name)
         return None
 
-    @method(in_signature="ou", out_signature="")
-    async def RequestConfirmation(self, device, passkey) -> None:  # noqa: N802
+    @method(in_signature="ou")
+    async def RequestConfirmation(self, device: "o", passkey: "u") -> "":  # noqa: N802
         await self._approve_or_reject(device)
         return None
 
-    @method(in_signature="o", out_signature="")
-    async def RequestAuthorization(self, device) -> None:  # noqa: N802
+    @method(in_signature="o")
+    async def RequestAuthorization(self, device: "o") -> "":  # noqa: N802
         await self._approve_or_reject(device)
         return None
 
-    @method(in_signature="os", out_signature="")
-    async def AuthorizeService(self, device, uuid) -> None:  # noqa: N802
+    @method(in_signature="os")
+    async def AuthorizeService(self, device: "o", uuid: "s") -> "":  # noqa: N802
         await self._approve_or_reject(device)
         return None
 
     # Provide basic NoInputNoOutput behavior for other methods
-    @method(in_signature="o", out_signature="s")
-    async def RequestPinCode(self, device):  # noqa: N802
+    @method(in_signature="o")
+    async def RequestPinCode(self, device: "o") -> "s":  # noqa: N802
         await self._approve_or_reject(device)
         return "0000"
 
-    @method(in_signature="o", out_signature="u")
-    async def RequestPasskey(self, device):  # noqa: N802
+    @method(in_signature="o")
+    async def RequestPasskey(self, device: "o") -> "u":  # noqa: N802
         await self._approve_or_reject(device)
         return 0
 
-    @method(in_signature="os", out_signature="")
-    async def DisplayPinCode(self, device, pincode) -> None:  # noqa: N802
+    @method(in_signature="os")
+    async def DisplayPinCode(self, device: "o", pincode: "s") -> "":  # noqa: N802
         return None
 
-    @method(in_signature="ouq", out_signature="")
-    async def DisplayPasskey(self, device, passkey, entered) -> None:  # noqa: N802
+    @method(in_signature="ouq")
+    async def DisplayPasskey(self, device: "o", passkey: "u", entered: "q") -> "":  # noqa: N802
         return None
 
-    @method(out_signature="")
-    async def Cancel(self) -> None:  # noqa: N802
+    @method()
+    async def Cancel(self) -> "":  # noqa: N802
         return None
 
 
