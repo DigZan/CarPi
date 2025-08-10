@@ -16,6 +16,14 @@ sudo -u carpi git pull --ff-only
 
 sudo -u carpi "${INSTALL_DIR}/venv/bin/pip" install -r requirements.txt --upgrade --no-cache-dir
 
+echo "[CarPi] Syncing systemd unit files"
+cp "${INSTALL_DIR}/systemd/carpi.service" /etc/systemd/system/
+cp "${INSTALL_DIR}/systemd/carpi-update.service" /etc/systemd/system/
+cp "${INSTALL_DIR}/systemd/carpi-update.timer" /etc/systemd/system/
+systemctl daemon-reload
+systemctl enable carpi.service || true
+systemctl enable --now carpi-update.timer || true
+
 echo "[CarPi] Update done, restarting service"
 systemctl restart carpi.service || true
 

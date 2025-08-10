@@ -4,23 +4,23 @@ import asyncio
 import logging
 import signal
 
-from .config import load_config
-from .logging_setup import setup_logging
-from .event_bus import EventBus
-from .storage.db import Database
+from carpi.config import load_config
+from carpi.logging_setup import setup_logging
+from carpi.event_bus import EventBus
+from carpi.storage.db import Database
 
-from .modules.sensors.bme280 import BME280Reader
-from .modules.sensors.icm20948 import ICM20948Reader
-from .modules.sensors.gps import GPSReader
-from .modules.sensors.fan import FanController
+from carpi.modules.sensors.bme280 import BME280Reader
+from carpi.modules.sensors.icm20948 import ICM20948Reader
+from carpi.modules.sensors.gps import GPSReader
+from carpi.modules.sensors.fan import FanController
 
-from .modules.audio.mixer import AudioMixer
-from .modules.audio.input_audio import InputAudio
-from .modules.bluetooth.bt import BluetoothManager
-from .modules.navigation.nav import Navigation
-from .modules.music.music import MusicPlayer
-from .modules.storage.ssd import SSDManager
-from .modules.web.server import WebServer
+from carpi.modules.audio.mixer import AudioMixer
+from carpi.modules.audio.input_audio import InputAudio
+from carpi.modules.bluetooth.bt import BluetoothManager
+from carpi.modules.navigation.nav import Navigation
+from carpi.modules.music.music import MusicPlayer
+from carpi.modules.storage.ssd import SSDManager
+from carpi.modules.web.server import WebServer
 
 
 async def main_async() -> None:
