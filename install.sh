@@ -22,6 +22,8 @@ fi
 
 apt-get install -y \
   git python3 python3-venv python3-pip \
+  build-essential python3-dev \
+  libasound2-dev alsa-utils \
   i2c-tools \
   bluez bluez-tools \
   sqlite3 rsync curl
