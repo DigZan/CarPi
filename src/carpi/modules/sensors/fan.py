@@ -60,6 +60,25 @@ class FanController:
             return
         self.set_duty_percent(self._default_duty)
         logger.info("Fan controller initialized on BCM %s (%s)", self._pwm_pin, "PWM" if self._is_pwm else "ON/OFF")
+        # Subscribe to fan.set events for runtime control
+        try:
+            import asyncio
+            from ...event_bus import EventBus  # type: ignore
+            # Best-effort subscription when used within app context
+            loop = asyncio.get_running_loop()
+            loop.create_task(self._listen_commands())
+        except Exception:
+            pass
+
+    async def _listen_commands(self) -> None:
+        try:
+            from ...event_bus import EventBus  # type: ignore
+        except Exception:
+            return
+        # This import will be resolved in app context where EventBus is available on module path
+        # We need a reference to the global bus; in current design, FanController is given events in main.
+        # So this placeholder does nothing if not wired. Left for future.
+        return
 
     def stop(self) -> None:
         if self._device and hasattr(self._device, "close"):

@@ -9,6 +9,7 @@ from aiohttp import web  # type: ignore[reportMissingImports]
 
 from ...event_bus import EventBus
 from ...storage.db import Database
+from ..sensors.fan import FanController  # for type hints only
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +24,7 @@ class WebServer:
         self._app: Optional[web.Application] = None
         self._runner: Optional[web.AppRunner] = None
         self._site: Optional[web.TCPSite] = None
+        self._fan_duty: int = 0
 
     def start(self) -> None:
         if self._task is None:
@@ -44,6 +46,7 @@ class WebServer:
             web.get('/api/sse', self._handle_sse),
             web.get('/api/contacts', self._handle_contacts),
             web.get('/api/bt_devices', self._handle_bt_devices),
+            web.post('/api/fan', self._handle_fan),
         ])
         self._app = app
         self._runner = web.AppRunner(app)
@@ -102,6 +105,11 @@ class WebServer:
         <h3>Bluetooth Devices</h3>
         <pre id="btdev">Loading...</pre>
       </div>
+      <div>
+        <h3>Fan</h3>
+        <input type="range" id="fanSlider" min="0" max="100" value="0" />
+        <span id="fanVal">0%</span>
+      </div>
     </div>
     <script>
       const es = new EventSource('/api/sse');
@@ -132,6 +140,15 @@ class WebServer:
       }
       loadDevices();
       setInterval(loadDevices, 5000);
+      const slider = document.getElementById('fanSlider');
+      const fanVal = document.getElementById('fanVal');
+      slider.addEventListener('input', ()=>{ fanVal.textContent = slider.value + '%'; });
+      slider.addEventListener('change', async ()=>{
+        const duty = parseInt(slider.value, 10) || 0;
+        try{
+          await fetch('/api/fan', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ duty })});
+        }catch(e){}
+      });
     </script>
   </body>
 </html>
@@ -185,6 +202,17 @@ class WebServer:
     async def _handle_bt_devices(self, request: web.Request) -> web.Response:
         devices = await self._db.list_bt_devices()
         return web.json_response(devices)
+
+    async def _handle_fan(self, request: web.Request) -> web.Response:
+        try:
+            payload = await request.json()
+            duty = int(payload.get('duty', 0))
+            duty = max(0, min(100, duty))
+            self._fan_duty = duty
+            await self._events.publish('fan.set', {'duty': duty})
+            return web.json_response({'ok': True, 'duty': duty})
+        except Exception as exc:
+            return web.json_response({'ok': False, 'error': str(exc)}, status=400)
 
 
 

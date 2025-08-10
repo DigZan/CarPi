@@ -20,6 +20,7 @@ class ICM20948Reader:
         self._db = db
         self._events = bus_events
         self._task: asyncio.Task | None = None
+        self._mag_inited: bool = False
 
     def start(self) -> None:
         if self._task is None:
@@ -57,13 +58,41 @@ class ICM20948Reader:
                 gx = read_word(0x33, 0x34)
                 gy = read_word(0x35, 0x36)
                 gz = read_word(0x37, 0x38)
-                # Magnetometer (AK09916) via I2C master on ICM-20948 requires enabling; attempt basic read if available
-                # These registers are device-specific; for a simple demo, attempt to read 3 axes if exposed
+                # Try to enable bypass to access AK09916 magnetometer on address 0x0C
                 mx = my = mz = None
                 try:
-                    mx = read_word(0x11, 0x12)
-                    my = read_word(0x13, 0x14)
-                    mz = read_word(0x15, 0x16)
+                    # Select bank 0
+                    bus.write_byte_data(self._address, 0x7F, 0x00)
+                    # Disable I2C master so bypass works
+                    bus.write_byte_data(self._address, 0x03, 0x00)
+                    # Enable bypass on INT pin
+                    bus.write_byte_data(self._address, 0x0F, 0x02)
+                    if not self._mag_inited:
+                        # Reset AK09916
+                        bus.write_byte_data(0x0C, 0x32, 0x01)
+                        # Small delay for reset
+                        # Note: no sleep in thread; rely on subsequent calls
+                        # Set to continuous measurement mode 2 (100Hz)
+                        bus.write_byte_data(0x0C, 0x31, 0x08)
+                        self._mag_inited = True
+                    # Read status
+                    st1 = bus.read_byte_data(0x0C, 0x10)
+                    if st1 & 0x01:
+                        # Read 8 bytes: HXL..HZH plus ST2
+                        data = bus.read_i2c_block_data(0x0C, 0x11, 8)
+                        # data order: XL, XH, YL, YH, ZL, ZH, TMPS, ST2
+                        def s16(lo: int, hi: int) -> int:
+                            val = (hi << 8) | lo
+                            return val - 65536 if val & 0x8000 else val
+                        x = s16(data[0], data[1])
+                        y = s16(data[2], data[3])
+                        z = s16(data[4], data[5])
+                        # ST2 overflow check bit3
+                        if (data[7] & 0x08) == 0:
+                            # Convert to microtesla (0.15 uT/LSB)
+                            mx = x * 0.15
+                            my = y * 0.15
+                            mz = z * 0.15
                 except Exception:
                     pass
                 # Convert to units (very rough, for display only)
@@ -78,8 +107,7 @@ class ICM20948Reader:
                     "gyro_dps": {"x": float(gx_dps), "y": float(gy_dps), "z": float(gz_dps)},
                 }
                 if mx is not None and my is not None and mz is not None:
-                    # Units unknown without proper config; expose raw for display
-                    result["mag_raw"] = {"x": float(mx), "y": float(my), "z": float(mz)}
+                    result["mag_uT"] = {"x": float(mx), "y": float(my), "z": float(mz)}
                 return result  # type: ignore[return-value]
         except Exception as exc:
             logger.debug("ICM20948 read failed: %s", exc)

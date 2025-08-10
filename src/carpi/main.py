@@ -70,6 +70,16 @@ async def main_async() -> None:
     webserver = WebServer(events, db)
     webserver.start()
 
+    async def handle_fan_set() -> None:
+        async for ev in events.subscribe("fan.set"):
+            try:
+                duty = int(ev.get("duty", 0))
+                fan.set_duty_percent(duty)
+            except Exception:
+                pass
+
+    asyncio.create_task(handle_fan_set(), name="fan-set-listener")
+
     stop_event = asyncio.Event()
 
     def _signal_handler() -> None:

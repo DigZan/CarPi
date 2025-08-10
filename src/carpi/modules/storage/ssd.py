@@ -146,9 +146,12 @@ class SSDManager:
             forbidden_prefixes = ("mmcblk", "nvme", "loop", "zram", "dm-", "md", "sr")
             if any((p.name or "").startswith(pref) for pref in forbidden_prefixes):
                 return False
-            # If mounted, require typical external mount locations
-            if p.mountpoint and not any(p.mountpoint.startswith(prefix) for prefix in ("/media", "/mnt", "/run/media")):
-                return False
+            # If mounted, require typical external mount locations and exclude /boot
+            if p.mountpoint:
+                if p.mountpoint.startswith("/boot"):
+                    return False
+                if not any(p.mountpoint.startswith(prefix) for prefix in ("/media", "/mnt", "/run/media")):
+                    return False
             return True
 
         candidate = next((p for p in parts if _is_candidate(p)), None)
