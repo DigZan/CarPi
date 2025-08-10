@@ -134,10 +134,24 @@ class SSDManager:
 
     async def _scan_and_reconcile(self) -> None:
         parts = _collect_usb_partitions()
-        # Prefer removable, USB transport
-        candidate = next((p for p in parts if p.transport == "usb" and p.fs_type), None)
-        if candidate is None and parts:
-            candidate = next((p for p in parts if p.fs_type), None)
+
+        def _is_candidate(p: UsbPartition) -> bool:
+            # Only consider USB transport devices
+            if p.transport != "usb":
+                return False
+            # Must have a filesystem
+            if not p.fs_type:
+                return False
+            # Ignore obvious system device prefixes
+            forbidden_prefixes = ("mmcblk", "loop", "zram", "dm-", "md", "sr")
+            if any((p.name or "").startswith(pref) for pref in forbidden_prefixes):
+                return False
+            # If mounted, prefer typical external mount locations
+            if p.mountpoint and not any(p.mountpoint.startswith(prefix) for prefix in ("/media", "/mnt")):
+                return False
+            return True
+
+        candidate = next((p for p in parts if _is_candidate(p)), None)
 
         if candidate is None:
             # No device present
@@ -215,8 +229,7 @@ class SSDManager:
         payload = {
             "connected": device_present,
             "mounted": mounted,
-            # Only show device path when a removable USB device is selected
-            "device": (self._current.path if (self._current and self._current.transport == "usb") else None),
+            "device": (self._current.path if self._current else None),
             "model": (self._current.model if self._current else None),
             "fs": (self._current.fs_type if self._current else None),
             "mountpoint": self._mountpoint,

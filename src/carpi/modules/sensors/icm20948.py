@@ -37,8 +37,37 @@ class ICM20948Reader:
     def _read_fast_raw(self) -> dict[str, float] | None:
         try:
             with SMBus(self._i2c_bus_num) as bus:
-                who = bus.read_byte_data(self._address, 0x00)  # WHO_AM_I
-                return {"who_am_i": float(who)}
+                # Wake up, set up basic measurement config and read raw accel/gyro
+                # PWR_MGMT_1: clear sleep bit
+                bus.write_byte_data(self._address, 0x06, 0x01)
+                # Configure accelerometer and gyro to some defaults
+                # ACCEL_CONFIG (0x14): +/- 2g (0), GYRO_CONFIG (0x01): 250 dps (0)
+                # Some ICM-20948 variants use banked registers; keep minimal for demo
+                # Read accel XYZ (high/low)
+                def read_word(h_reg: int, l_reg: int) -> int:
+                    msb = bus.read_byte_data(self._address, h_reg)
+                    lsb = bus.read_byte_data(self._address, l_reg)
+                    val = (msb << 8) | lsb
+                    return val - 65536 if val & 0x8000 else val
+
+                # Addresses for accel/gyro may vary with bank; these are placeholders for demo
+                ax = read_word(0x2D, 0x2E)
+                ay = read_word(0x2F, 0x30)
+                az = read_word(0x31, 0x32)
+                gx = read_word(0x33, 0x34)
+                gy = read_word(0x35, 0x36)
+                gz = read_word(0x37, 0x38)
+                # Convert to units (very rough, for display only)
+                ax_g = ax / 16384.0
+                ay_g = ay / 16384.0
+                az_g = az / 16384.0
+                gx_dps = gx / 131.0
+                gy_dps = gy / 131.0
+                gz_dps = gz / 131.0
+                return {
+                    "accel_g": {"x": float(ax_g), "y": float(ay_g), "z": float(az_g)},
+                    "gyro_dps": {"x": float(gx_dps), "y": float(gy_dps), "z": float(gz_dps)},
+                }
         except Exception as exc:
             logger.debug("ICM20948 read failed: %s", exc)
             return None
