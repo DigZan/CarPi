@@ -24,6 +24,7 @@ apt-get install -y \
   git python3 python3-venv python3-pip \
   build-essential python3-dev \
   libasound2-dev alsa-utils \
+  pigpio \
   i2c-tools \
   bluez bluez-tools \
   sqlite3 rsync curl
@@ -92,6 +93,7 @@ cp "${INSTALL_DIR}/systemd/carpi-update.timer" /etc/systemd/system/
 systemctl daemon-reload
 systemctl enable carpi.service
 systemctl enable --now carpi-update.timer
+systemctl enable --now pigpio || true
 systemctl restart carpi.service || systemctl start carpi.service
 
 echo "[CarPi] Installation complete. Use: systemctl status carpi.service"
