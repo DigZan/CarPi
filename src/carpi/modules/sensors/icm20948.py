@@ -108,6 +108,17 @@ class ICM20948Reader:
                 }
                 if mx is not None and my is not None and mz is not None:
                     result["mag_uT"] = {"x": float(mx), "y": float(my), "z": float(mz)}
+                    # Heading in degrees (0..360), using X (east) and Y (north) conventional mapping
+                    import math
+                    heading = math.degrees(math.atan2(my, mx))
+                    if heading < 0:
+                        heading += 360.0
+                    def to_compass(deg: float) -> str:
+                        dirs = ["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"]
+                        idx = int((deg + 11.25) // 22.5) % 16
+                        return dirs[idx]
+                    result["heading_deg"] = float(heading)
+                    result["heading_cardinal"] = to_compass(heading)
                 return result  # type: ignore[return-value]
         except Exception as exc:
             logger.debug("ICM20948 read failed: %s", exc)

@@ -36,6 +36,8 @@ def _run_lsblk_json() -> Dict[str, Any] | None:
                 "lsblk",
                 "-J",
                 "-o",
+                "-b",
+                "-o",
                 "NAME,TYPE,RM,MODEL,TRAN,MOUNTPOINT,UUID,FSTYPE,KNAME,FSSIZE,FSUSED,FSAVAIL",
             ],
             stdout=subprocess.PIPE,
