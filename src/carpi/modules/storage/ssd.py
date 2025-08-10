@@ -24,6 +24,9 @@ class UsbPartition:
     model: Optional[str]
     is_removable: bool
     transport: Optional[str]
+    fssize: Optional[int]
+    fsused: Optional[int]
+    fsavail: Optional[int]
 
 
 def _run_lsblk_json() -> Dict[str, Any] | None:
@@ -33,7 +36,7 @@ def _run_lsblk_json() -> Dict[str, Any] | None:
                 "lsblk",
                 "-J",
                 "-o",
-                "NAME,TYPE,RM,MODEL,TRAN,MOUNTPOINT,UUID,FSTYPE,KNAME",
+                "NAME,TYPE,RM,MODEL,TRAN,MOUNTPOINT,UUID,FSTYPE,KNAME,FSSIZE,FSUSED,FSAVAIL",
             ],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
@@ -64,6 +67,11 @@ def _collect_usb_partitions() -> List[UsbPartition]:
                 continue
             name = ch.get("name") or ch.get("kname") or ""
             path = f"/dev/{name}"
+            def _to_int(v: Any) -> Optional[int]:
+                try:
+                    return int(v) if v is not None else None
+                except Exception:
+                    return None
             parts.append(
                 UsbPartition(
                     name=name,
@@ -74,6 +82,9 @@ def _collect_usb_partitions() -> List[UsbPartition]:
                     model=model,
                     is_removable=rm,
                     transport=tran,
+                    fssize=_to_int(ch.get("fssize")),
+                    fsused=_to_int(ch.get("fsused")),
+                    fsavail=_to_int(ch.get("fsavail")),
                 )
             )
     return parts
@@ -239,11 +250,17 @@ class SSDManager:
         mounted = bool(self._mountpoint)
         total = free = used = None
         if mounted and self._mountpoint:
-            try:
-                du = shutil.disk_usage(self._mountpoint)
-                total, used, free = du.total, du.used, du.free
-            except Exception:
-                pass
+            # Prefer lsblk-provided sizes if available (bytes)
+            if self._current and (self._current.fssize is not None) and (self._current.fsavail is not None):
+                total = self._current.fssize
+                free = self._current.fsavail
+                used = (self._current.fsused if self._current.fsused is not None else (total - free))
+            else:
+                try:
+                    du = shutil.disk_usage(self._mountpoint)
+                    total, used, free = du.total, du.used, du.free
+                except Exception:
+                    pass
         payload = {
             "connected": device_present,
             "mounted": mounted,

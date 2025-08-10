@@ -94,13 +94,16 @@ class FanController:
             return
         try:
             if self._is_pwm:
+                # Map: 0% -> 0.0, 1% -> 0.5, 100% -> 1.0, linear from 1..100
+                pwm_value = 0.0 if duty == 0 else (0.5 + (duty - 1) * (0.5 / 99.0))
+                pwm_value = max(0.0, min(1.0, pwm_value))
                 # type: ignore[attr-defined]
-                self._device.value = duty / 100.0
+                self._device.value = pwm_value
             else:
-                # ON/OFF fallback: threshold at 50%
+                # ON/OFF fallback: off at 0%, on for any >=1%
                 # type: ignore[attr-defined]
-                self._device.value = 1.0 if duty >= 50 else 0.0
-            logger.info("Fan duty set to %d%%", duty)
+                self._device.value = 1.0 if duty >= 1 else 0.0
+            logger.info("Fan duty set to %d%% (value=%.3f)", duty, getattr(self._device, 'value', -1))
         except Exception as exc:
             logger.warning("Failed to set fan duty: %s", exc)
 
