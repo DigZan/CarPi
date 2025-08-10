@@ -87,37 +87,37 @@ class BluetoothAgent(ServiceInterface):
     async def Release(self) -> "":  # noqa: N802 (DBus name)
         return None
 
-    @method(in_signature="ou")
+    @method()
     async def RequestConfirmation(self, device: "o", passkey: "u") -> "":  # noqa: N802
         await self._approve_or_reject(device)
         return None
 
-    @method(in_signature="o")
+    @method()
     async def RequestAuthorization(self, device: "o") -> "":  # noqa: N802
         await self._approve_or_reject(device)
         return None
 
-    @method(in_signature="os")
+    @method()
     async def AuthorizeService(self, device: "o", uuid: "s") -> "":  # noqa: N802
         await self._approve_or_reject(device)
         return None
 
     # Provide basic NoInputNoOutput behavior for other methods
-    @method(in_signature="o")
+    @method()
     async def RequestPinCode(self, device: "o") -> "s":  # noqa: N802
         await self._approve_or_reject(device)
         return "0000"
 
-    @method(in_signature="o")
+    @method()
     async def RequestPasskey(self, device: "o") -> "u":  # noqa: N802
         await self._approve_or_reject(device)
         return 0
 
-    @method(in_signature="os")
+    @method()
     async def DisplayPinCode(self, device: "o", pincode: "s") -> "":  # noqa: N802
         return None
 
-    @method(in_signature="ouq")
+    @method()
     async def DisplayPasskey(self, device: "o", passkey: "u", entered: "q") -> "":  # noqa: N802
         return None
 
