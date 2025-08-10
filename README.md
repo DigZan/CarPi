@@ -21,6 +21,20 @@ Modular Raspberry Pi in-car system with sensors, audio mixing, Bluetooth, naviga
 - GPS NEO-6M (UART): TX -> GPIO15 (RX), RX -> GPIO14 (TX, optional), VCC 3.3V/5V per module
 - PWM fan: control on GPIO18 via NPN transistor; fan powered separately; grounds common
 
+### Prerequisites (before installing)
+Enable the UART and disable the login shell over serial using the interactive tool:
+
+```bash
+sudo raspi-config
+```
+
+Then navigate: Interface Options → Serial Port →
+- "Login shell over serial?" → No
+- "Enable serial port hardware?" → Yes
+
+Note: On some systems the non-interactive form may work: `sudo raspi-config nonint do_serial 0`.
+The installer will enable I2C automatically, but you can also run: `sudo raspi-config nonint do_i2c 0`.
+
 ### One-line install (on the Raspberry Pi)
 Run in a terminal on Raspberry Pi OS (Bookworm recommended):
 

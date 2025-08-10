@@ -26,12 +26,10 @@ apt-get install -y \
   bluez bluez-tools \
   sqlite3 rsync curl
 
-# Enable I2C and serial (best effort; ignore if raspi-config not present)
+# Enable I2C (best effort; ignore if raspi-config not present)
 if command -v raspi-config >/dev/null 2>&1; then
   echo "[CarPi] Enabling I2C and serial (UART)"
   raspi-config nonint do_i2c 0 || true
-  # Disable login shell over serial, enable UART (non-interactive)
-  raspi-config nonint do_serial 0 || true
 fi
 
 # Create user and directories
