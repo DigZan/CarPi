@@ -24,8 +24,7 @@ systemctl daemon-reload
 systemctl enable carpi.service || true
 systemctl enable --now carpi-update.timer || true
 
-echo "[CarPi] Update done, restarting service"
-systemctl restart carpi.service || true
+echo "[CarPi] Update complete. Changes will take effect on next service restart or reboot."
 
 
 

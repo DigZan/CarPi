@@ -94,7 +94,7 @@ systemctl daemon-reload
 systemctl enable carpi.service
 systemctl enable --now carpi-update.timer
 systemctl enable --now pigpio || true
-systemctl restart carpi.service || systemctl start carpi.service
+systemctl start carpi.service || true
 
 echo "[CarPi] Installation complete. Use: systemctl status carpi.service"
 
